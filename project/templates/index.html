@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chatbox</title>
+<style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ca5da0, #fad0c4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            width: 400px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        /* Chat Box */
+        #chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Message Bubbles */
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+            animation: slideIn 0.5s ease-in-out;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message p {
+            max-width: 70%;
+            padding: 12px;
+            border-radius: 15px;
+            margin: 0;
+            position: relative;
+            animation: popIn 0.3s ease-in-out;
+        }
+
+        .message.user p {
+            background: linear-gradient(135deg, #72b4dd, #4a6cf7);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot p {
+            background: linear-gradient(135deg, #f5f7fa, #e2e8f0);
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        #user-input:focus {
+            border-color: #6e8efb;
+        }
+
+        #send-btn {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, hsl(61, 95%, 49%), #e4ee14);
+            color: rgb(3, 3, 3);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(110, 142, 251, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar Styling */
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Chat Box -->
+        <div id="chat-box">
+            <!-- Example Bot Message -->
+            <div class="message bot">
+                <p>Hello! How can I assist you today? 😊</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to handle user input and display chatbot responses
+        document.getElementById("send-btn").addEventListener("click", function() {
+            const userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") return;  // Ignore empty input
+
+            // Display user's message in the chat box
+            const chatBox = document.getElementById("chat-box");
+            const userMessage = document.createElement("div");
+            userMessage.classList.add("message", "user");
+            userMessage.innerHTML = `<p>${userInput}</p>`;
+            chatBox.appendChild(userMessage);
+
+            // Clear the input field
+            document.getElementById("user-input").value = "";
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send user input to the backend
+            fetch("/get_response", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ user_input: userInput }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display chatbot's response in the chat box
+                const botMessage = document.createElement("div");
+                botMessage.classList.add("message", "bot");
+                botMessage.innerHTML = `<p>${data.response}</p>`;
+                chatBox.appendChild(botMessage);
+
+                // Scroll to the bottom of the chat box
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        });
+    </script>
+</body>
+</html>
